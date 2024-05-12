@@ -1,5 +1,8 @@
 package com.example.apmojocoya;
 
+import static android.content.ContentValues.TAG;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -14,6 +17,10 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -24,7 +31,14 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.example.apmojocoya.LoginActivity;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -37,11 +51,57 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-      /*  Button btn = findViewById(R.id.buttonasd);
-        btn.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-            startActivity(intent);
-        });*/
+        // Inicializar Firebase
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        Button button = findViewById(R.id.buttonasd);
+        button.setOnClickListener(v -> {
+
+          /*  // Create a new user with a first, middle, and last name
+            Map<String, Object> user = new HashMap<>();
+            user.put("first", "Alan");
+            user.put("middle", "Mathison");
+            user.put("last", "Turing");
+            user.put("born", 1913);
+
+            // Add a new document with a generated ID
+            db.collection("users")
+                    .add(user)
+                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                        @Override
+                        public void onSuccess(DocumentReference documentReference) {
+                            Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Error adding document", e);
+                        }
+                    });*/
+
+            //leer la base de datos el logcat
+            db.collection("users")
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    Log.d(TAG, document.getId() + " => " + document.getData());
+                                }
+                            } else {
+                                Log.w(TAG, "Error getting documents.", task.getException());
+                            }
+                        }
+                    });
+            checkPermission();
+
+        });
+
+
+
+
 
 
 
@@ -49,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
         checkPermission();
 
     // Nombre del archivo xlsx y directorio
-        String FILE_NAME = "test1.xlsx";
+        String FILE_NAME = "test2.xlsx";
         String directoryPath = Environment.getExternalStorageDirectory() + "/Documents";
 
     // Crear el directorio (si no existe)
@@ -104,5 +164,4 @@ public class MainActivity extends AppCompatActivity {
             }
         }, 2300);
     }
-
 }

@@ -8,6 +8,8 @@ import android.os.Handler;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.example.apmojocoya.LoginActivity;
+import com.example.apmojocoya.MainActivity;
 
 public class StartingScreenActivity extends AppCompatActivity {
 
