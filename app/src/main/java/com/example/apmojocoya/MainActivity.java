@@ -44,7 +44,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 public class MainActivity extends AppCompatActivity {
 
     private boolean doubleBackToExitPressedOnce = false;
-
+    Button btn_usuarios;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,10 +54,16 @@ public class MainActivity extends AppCompatActivity {
         // Inicializar Firebase
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+        btn_usuarios = findViewById(R.id.btnusuarios);
+        btn_usuarios.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, UserActivity.class);
+            startActivity(intent);
+        });
+
         Button button = findViewById(R.id.buttonasd);
         button.setOnClickListener(v -> {
 
-          /*  // Create a new user with a first, middle, and last name
+            // Create a new user with a first, middle, and last name
             Map<String, Object> user = new HashMap<>();
             user.put("first", "Alan");
             user.put("middle", "Mathison");
@@ -78,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onFailure(@NonNull Exception e) {
                             Log.w(TAG, "Error adding document", e);
                         }
-                    });*/
+                    });
 
             //leer la base de datos el logcat
             db.collection("users")
@@ -136,8 +142,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     //cambiar el testo de textView
-        TextView textView = findViewById(R.id.textView);
-        textView.setText("Listo!");
+        //TextView textView = findViewById(R.id.textView);
+        //textView.setText("Listo!");
     }
 //Verificar si hay permiso de escritura
     private void checkPermission() {
