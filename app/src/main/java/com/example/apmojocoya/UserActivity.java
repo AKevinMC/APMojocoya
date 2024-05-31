@@ -53,13 +53,14 @@ public class UserActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         for (DocumentSnapshot document : task.getResult()) {
                             String name = document.getString("apellidos") + " " + document.getString("nombre");
+                            String id = document.getId();
 
-                            db.collection("users").document(document.getId()).collection("medidores")
+                            db.collection("users").document(id).collection("medidores")
                                     .get()
                                     .addOnCompleteListener(subTask -> {
                                         if (subTask.isSuccessful()) {
                                             int medidoresCount = subTask.getResult().size();
-                                            userList.add(new Usuario(name, medidoresCount));
+                                            userList.add(new Usuario(id, name, medidoresCount));
                                             userAdapter.notifyDataSetChanged();
                                         } else {
                                             // Manejar el error
