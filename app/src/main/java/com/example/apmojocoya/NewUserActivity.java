@@ -8,8 +8,10 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
@@ -19,7 +21,7 @@ import java.util.Map;
 
 public class NewUserActivity extends AppCompatActivity implements DialogAddMedidor.AddMedidorListener {
     Button btn_add_medidor, btnaceptar;
-    private EditText ET_nombre, ET_ci, ET_direccion, ET_celular;
+    private EditText ET_nombre, ET_apellidos, ET_ci, ET_direccion, ET_celular;
     private TextView TV_nro_medidores;
 
     private FirebaseFirestore db;
@@ -36,6 +38,7 @@ public class NewUserActivity extends AppCompatActivity implements DialogAddMedid
         medidores = new ArrayList<>();
 
         ET_nombre = findViewById(R.id.ETnombre);
+        ET_apellidos = findViewById(R.id.ETapellidos);
         ET_ci = findViewById(R.id.ETci);
         ET_direccion = findViewById(R.id.ETdireccion);
         ET_celular = findViewById(R.id.ETcelular);
@@ -51,12 +54,34 @@ public class NewUserActivity extends AppCompatActivity implements DialogAddMedid
 
         btnaceptar = findViewById(R.id.btnaceptar);
         btnaceptar.setOnClickListener(v -> {
-            saveUserToFirestore();
+            checkIfUserExists();
+        });
+    }
+
+    private void checkIfUserExists() {
+        String ci = ET_ci.getText().toString();
+
+        DocumentReference userRef = db.collection("users").document(ci);
+        userRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot document = task.getResult();
+                if (document.exists()) {
+                    // Usuario ya existe
+                    Toast.makeText(NewUserActivity.this, "El usuario ya existe", Toast.LENGTH_SHORT).show();
+                } else {
+                    // Usuario no existe, proceder a guardar
+                    saveUserToFirestore();
+                }
+            } else {
+                // Error al verificar la existencia del usuario
+                Toast.makeText(NewUserActivity.this, "Error al verificar el usuario", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
     private void saveUserToFirestore() {
         String nombre = ET_nombre.getText().toString();
+        String apellidos = ET_apellidos.getText().toString();
         String ci = ET_ci.getText().toString();
         String direccion = ET_direccion.getText().toString();
         String celular = ET_celular.getText().toString();
@@ -64,6 +89,7 @@ public class NewUserActivity extends AppCompatActivity implements DialogAddMedid
 
         Map<String, Object> user = new HashMap<>();
         user.put("nombre", nombre);
+        user.put("apellidos", apellidos);
         user.put("celular", celular);
         user.put("direccion", direccion);
         user.put("estado", "activo");
@@ -82,10 +108,10 @@ public class NewUserActivity extends AppCompatActivity implements DialogAddMedid
                 userRef.collection("medidor" + (i + 1)).document("details")
                         .set(medidor)
                         .addOnSuccessListener(aVoid1 -> {
-                            // Puedes manejar el éxito de cada medidor aquí
+                            // Éxito en guardar cada medidor
                         })
                         .addOnFailureListener(e -> {
-                            // Manejar el fallo de cada medidor aquí
+                            // Error al guardar cada medidor
                         });
 
                 Map<String, Object> historial = new HashMap<>();
@@ -98,8 +124,14 @@ public class NewUserActivity extends AppCompatActivity implements DialogAddMedid
                             // Manejar fallo
                         });
             }
+
+            // Una vez guardado todo, ir a UserActivity
+            Intent intent = new Intent(NewUserActivity.this, UserActivity.class);
+            startActivity(intent);
+
         }).addOnFailureListener(e -> {
             // Manejar el fallo de guardar el usuario
+            Toast.makeText(NewUserActivity.this, "Error al guardar el usuario", Toast.LENGTH_SHORT).show();
         });
     }
 
