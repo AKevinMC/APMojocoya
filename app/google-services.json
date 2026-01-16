@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "700937184800",
     "project_id": "bdapmojocoya",
-    "storage_bucket": "bdapmojocoya.appspot.com"
+    "storage_bucket": "bdapmojocoya.firebasestorage.app"
   },
   "client": [
     {
@@ -19,6 +19,14 @@
           "android_info": {
             "package_name": "com.example.apmojocoya",
             "certificate_hash": "156aa598f67cd11e94721ced5abfe31642386741"
+          }
+        },
+        {
+          "client_id": "700937184800-t3ff23l9ld8cpbkobp4e91aja7c7efus.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.apmojocoya",
+            "certificate_hash": "1ab8321d0b008adef7f92504675e9331fb26b284"
           }
         },
         {
