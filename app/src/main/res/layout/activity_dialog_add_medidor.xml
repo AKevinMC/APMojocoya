@@ -33,6 +33,13 @@
             android:layout_marginBottom="20dp"/>
 <!--            android:background="@drawable/edit_text_background"-->
 
+    <EditText
+        android:id="@+id/et_lectura_inicial"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="lectura inicial"
+        android:padding="10dp"
+        android:layout_marginBottom="20dp"/>
         <Button
             android:id="@+id/btnAceptarDialog"
             android:layout_width="match_parent"

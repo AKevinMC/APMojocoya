@@ -13,6 +13,7 @@ import android.widget.Toast;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,17 +26,16 @@ public class NewUserActivity extends AppCompatActivity implements DialogAddMedid
     private TextView TV_nro_medidores;
 
     private FirebaseFirestore db;
-    private List<Map<String, String>> medidores;
+    // Cambiamos a Map<String, Object> para soportar números (double)
+    private List<Map<String, Object>> medidoresList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_user);
 
-        // Inicializar Firestore
         db = FirebaseFirestore.getInstance();
-
-        medidores = new ArrayList<>();
+        medidoresList = new ArrayList<>();
 
         ET_nombre = findViewById(R.id.ETnombre);
         ET_apellidos = findViewById(R.id.ETapellidos);
@@ -54,96 +54,97 @@ public class NewUserActivity extends AppCompatActivity implements DialogAddMedid
 
         btnaceptar = findViewById(R.id.btnaceptar);
         btnaceptar.setOnClickListener(v -> {
+            // Validación básica antes de enviar
+            if (ET_ci.getText().toString().isEmpty() || ET_nombre.getText().toString().isEmpty()) {
+                Toast.makeText(this, "Nombre y CI son obligatorios", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (medidoresList.isEmpty()) {
+                Toast.makeText(this, "Debe agregar al menos un medidor", Toast.LENGTH_SHORT).show();
+                return;
+            }
             checkIfUserExists();
         });
     }
 
     private void checkIfUserExists() {
-        String ci = ET_ci.getText().toString();
+        String ci = ET_ci.getText().toString().trim();
 
-        DocumentReference userRef = db.collection("users").document(ci);
-        userRef.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                DocumentSnapshot document = task.getResult();
-                if (document.exists()) {
-                    // Usuario ya existe
-                    Toast.makeText(NewUserActivity.this, "El usuario ya existe", Toast.LENGTH_SHORT).show();
-                } else {
-                    // Usuario no existe, proceder a guardar
-                    saveUserToFirestore();
-                }
-            } else {
-                // Error al verificar la existencia del usuario
-                Toast.makeText(NewUserActivity.this, "Error al verificar el usuario", Toast.LENGTH_SHORT).show();
-            }
-        });
+        db.collection("users").document(ci).get()
+                .addOnSuccessListener(document -> {
+                    if (document.exists()) {
+                        Toast.makeText(NewUserActivity.this, "El usuario con este CI ya existe", Toast.LENGTH_SHORT).show();
+                    } else {
+                        saveUserToFirestore();
+                    }
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(NewUserActivity.this, "Error de conexión", Toast.LENGTH_SHORT).show()
+                );
     }
 
     private void saveUserToFirestore() {
-        String nombre = ET_nombre.getText().toString();
-        String apellidos = ET_apellidos.getText().toString();
-        String ci = ET_ci.getText().toString();
-        String direccion = ET_direccion.getText().toString();
-        String celular = ET_celular.getText().toString();
-        int nroMedidores = medidores.size();
+        String nombre = ET_nombre.getText().toString().trim();
+        String apellidos = ET_apellidos.getText().toString().trim();
+        String ci = ET_ci.getText().toString().trim();
+        String direccion = ET_direccion.getText().toString().trim();
+        String celular = ET_celular.getText().toString().trim();
 
+        // 1. Datos del Usuario
         Map<String, Object> user = new HashMap<>();
         user.put("nombre", nombre);
         user.put("apellidos", apellidos);
         user.put("celular", celular);
         user.put("direccion", direccion);
-        user.put("estado", "activo");
+        user.put("estado", "activo"); // Recomendado para filtrar en reportes
+        user.put("fecha_registro", com.google.firebase.firestore.FieldValue.serverTimestamp());
 
+        // Usamos un Batch para guardar todo junto (Usuario + Medidores)
+        WriteBatch batch = db.batch();
+
+        // Referencia al documento del usuario
         DocumentReference userRef = db.collection("users").document(ci);
-        userRef.set(user).addOnSuccessListener(aVoid -> {
-            for (int i = 0; i < nroMedidores; i++) {
-                Map<String, String> medidorData = medidores.get(i);
-                Map<String, Object> medidor = new HashMap<>();
-                medidor.put("nro_medidor", medidorData.get("nro_medidor"));
-                medidor.put("estado", "activo");
-                medidor.put("ubicacion", medidorData.get("ubicacion"));
-                medidor.put("fecha_inicio", medidorData.get("fecha_inicio"));
-                medidor.put("fecha_final", null);
+        batch.set(userRef, user);
 
-                userRef.collection("medidor" + (i + 1)).document("details")
-                        .set(medidor)
-                        .addOnSuccessListener(aVoid1 -> {
-                            // Éxito en guardar cada medidor
-                        })
-                        .addOnFailureListener(e -> {
-                            // Error al guardar cada medidor
-                        });
+        // 2. Datos de los Medidores (Subcolección limpia "medidores")
+        for (Map<String, Object> medidorData : medidoresList) {
+            String nroMedidor = (String) medidorData.get("nro_medidor");
 
-                Map<String, Object> historial = new HashMap<>();
-                userRef.collection("medidor" + (i + 1)).document("historial")
-                        .set(historial)
-                        .addOnSuccessListener(aVoid1 -> {
-                            // Manejar éxito
-                        })
-                        .addOnFailureListener(e -> {
-                            // Manejar fallo
-                        });
-            }
+            // Usamos el número de medidor como ID del documento para evitar duplicados
+            DocumentReference medidorRef = userRef.collection("medidores").document(nroMedidor);
 
-            // Una vez guardado todo, ir a UserActivity
+            // Añadimos datos extra necesarios
+            medidorData.put("estado", "activo");
+            // Nota: lectura_inicial ya viene en el mapa desde onAddMedidor
+
+            batch.set(medidorRef, medidorData);
+        }
+
+        // Ejecutar el guardado masivo
+        batch.commit().addOnSuccessListener(aVoid -> {
+            Toast.makeText(NewUserActivity.this, "Usuario registrado correctamente", Toast.LENGTH_SHORT).show();
+
             Intent intent = new Intent(NewUserActivity.this, UserActivity.class);
+            // Limpiar pila de actividades para que no vuelva atrás con "Back"
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
+            finish();
 
         }).addOnFailureListener(e -> {
-            // Manejar el fallo de guardar el usuario
-            Toast.makeText(NewUserActivity.this, "Error al guardar el usuario", Toast.LENGTH_SHORT).show();
+            Toast.makeText(NewUserActivity.this, "Error al guardar datos: " + e.getMessage(), Toast.LENGTH_LONG).show();
         });
     }
 
     @Override
-    public void onAddMedidor(String nroMedidor, String ubicacion, String fechaInicio) {
-        Map<String, String> medidor = new HashMap<>();
+    public void onAddMedidor(String nroMedidor, String ubicacion, String fechaInicio, double lecturaIni) {
+        Map<String, Object> medidor = new HashMap<>();
         medidor.put("nro_medidor", nroMedidor);
         medidor.put("ubicacion", ubicacion);
-        medidor.put("fecha_inicio", fechaInicio);
-        medidores.add(medidor);
+        medidor.put("fecha_instalacion", fechaInicio); // Nombre más técnico
+        medidor.put("lectura_inicial", lecturaIni);    // Dato clave para el primer cobro
 
-        // Actualiza el TextView con el número de medidores
-        TV_nro_medidores.setText("Nro Medidores: " + medidores.size());
+        medidoresList.add(medidor);
+
+        TV_nro_medidores.setText("Nro Medidores: " + medidoresList.size());
     }
 }
