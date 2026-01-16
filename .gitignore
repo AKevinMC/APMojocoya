@@ -22,3 +22,10 @@ google-services.json
 gradle/wrapper/
 gradlew
 gradlew.bat
+
+# --- Ignorar Tests generados por defecto ---
+app/src/test/
+app/src/androidTest/
+
+# --- Ignorar carpeta de Iconos (Opcional - Úsalo solo si subes zips para IA) ---
+# app/src/main/res/mipmap-*/
