@@ -1,15 +1,24 @@
+# --- SEGURIDAD (CRÍTICO) ---
+google-services.json
+
+# --- Compilación y Temporales ---
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
 .DS_Store
 /build
+/app/build
 /captures
 .externalNativeBuild
 .cxx
-local.properties
+*.apk
+*.aab
+
+# --- Android Studio (Ruido) ---
+# Bloquea toda la carpeta de configuración del IDE
+.idea/
+
+# --- Gradle Wrapper y Scripts (Opcional: Agrégalo si quieres ahorrar espacio al subir) ---
+gradle/wrapper/
+gradlew
+gradlew.bat
