@@ -1,7 +1,14 @@
-# --- SEGURIDAD (CRÍTICO) ---
+# ======================================
+# 1. SEGURIDAD (CRÍTICO)
+# ======================================
 google-services.json
+key.properties
+*.keystore
+*.jks
 
-# --- Compilación y Temporales ---
+# ======================================
+# 2. COMPILACIÓN Y TEMPORALES (Basura)
+# ======================================
 *.iml
 .gradle
 /local.properties
@@ -13,19 +20,50 @@ google-services.json
 .cxx
 *.apk
 *.aab
+*.prof
+*.profdata
 
-# --- Android Studio (Ruido) ---
-# Bloquea toda la carpeta de configuración del IDE
+# ======================================
+# 3. ANDROID STUDIO (Configuración IDE)
+# ======================================
 .idea/
+.navigation/
+*.nav
 
-# --- Gradle Wrapper y Scripts (Opcional: Agrégalo si quieres ahorrar espacio al subir) ---
+# ======================================
+# 4. GRADLE WRAPPER (Opcional)
+# ======================================
 gradle/wrapper/
 gradlew
 gradlew.bat
 
-# --- Ignorar Tests generados por defecto ---
+# ======================================
+# 5. TESTS (No necesarios para crear lógica)
+# ======================================
 app/src/test/
 app/src/androidTest/
 
-# --- Ignorar carpeta de Iconos (Opcional - Úsalo solo si subes zips para IA) ---
-# app/src/main/res/mipmap-*/
+# ======================================
+# 6. OPTIMIZACIÓN EXTREMA PARA IA
+# (Elimina imágenes e iconos pesados)
+# ======================================
+
+# Ignorar todas las carpetas de iconos (Mipmap)
+app/src/main/res/mipmap-anydpi-v26/
+app/src/main/res/mipmap-hdpi/
+app/src/main/res/mipmap-mdpi/
+app/src/main/res/mipmap-xhdpi/
+app/src/main/res/mipmap-xxhdpi/
+app/src/main/res/mipmap-xxxhdpi/
+
+# Ignorar archivos de imagen binarios en todo el proyecto
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.bmp
+
+# Ignorar librerías compiladas (la IA no puede leerlas)
+app/libs/*.jar
+app/libs/*.aar
