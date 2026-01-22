@@ -4,18 +4,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Button btnRegistrar, btnVerUsuarios, btnExportarPadron;
+    private Button btnRegistrar, btnVerUsuarios, btnExportarPadron, btnTomarLecturas, btnConfigurarTarifa, btnGastos, btnCobranza;
     private FirebaseFirestore db;
 
     @Override
@@ -25,52 +19,53 @@ public class MainActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
 
+        // 1. Vincular los botones con el diseño XML
         btnRegistrar = findViewById(R.id.btn_registrar_usuario);
         btnVerUsuarios = findViewById(R.id.btn_ver_usuarios);
         btnExportarPadron = findViewById(R.id.btn_exportar_padron);
+        btnTomarLecturas = findViewById(R.id.btn_tomar_lecturas);
+        btnConfigurarTarifa = findViewById(R.id.btn_guardar_tarifa);
+        btnCobranza = findViewById(R.id.btn_cobranza);
+        btnCobranza.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, CobranzaActivity.class)));
+        btnGastos = findViewById(R.id.btn_gastos); // Crea este botón en tu XML
+        btnGastos.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, GastosActivity.class)));
 
-        btnRegistrar.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, NewUserActivity.class)));
-        btnVerUsuarios.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, UserActivity.class)));
+        // 2. Configurar las acciones (Navegación)
 
-        // Acción directa sin chequeo de permisos
+        // Ir a Registrar Usuario
+        btnRegistrar.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, NewUserActivity.class))
+        );
+
+        // Ir a Ver Lista de Usuarios
+        btnVerUsuarios.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, UserActivity.class))
+        );
+
+        // Ir a Tomar Lecturas
+        btnTomarLecturas.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, YearActivity.class))
+        );
+
+        // Ir a Configurar Precios
+        btnConfigurarTarifa.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, ConfigTarifaActivity.class))
+        );
+
+        // --- CAMBIO IMPORTANTE AQUÍ ---
+        // Ir a la nueva pantalla de Reportes (Excel)
+        // Ya no llamamos a 'exportarDatos' directamente porque necesitamos elegir el mes primero.
         btnExportarPadron.setOnClickListener(v -> {
-            Toast.makeText(MainActivity.this, "Generando...", Toast.LENGTH_SHORT).show();
-            // Llamada directa a tu función de exportar
-            exportarDatos();
+            Intent intent = new Intent(MainActivity.this, ReportActivity.class);
+            startActivity(intent);
         });
     }
-
-    private void exportarDatos() {
-        Toast.makeText(this, "Generando reporte...", Toast.LENGTH_SHORT).show();
-
-        db.collection("users").get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<Map<String, Object>> listaParaExcel = new ArrayList<>();
-                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        Map<String, Object> data = document.getData();
-                        data.put("ci", document.getId());
-                        listaParaExcel.add(data);
-                    }
-
-                    if (listaParaExcel.isEmpty()) {
-                        Toast.makeText(this, "No hay usuarios para exportar.", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    // Llamamos al generador seguro
-                    String ruta = ExcelReportGenerator.guardarPadron(this, listaParaExcel);
-
-                    if (ruta != null) {
-                        // Mensaje de éxito con la ruta
-                        Toast.makeText(this, "✅ Guardado en Documentos de la App", Toast.LENGTH_LONG).show();
-                        // Opcional: Mostrar la ruta exacta en un segundo Toast si quieres verla
-                        // Toast.makeText(this, ruta, Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(this, "❌ Ocurrió un error al guardar.", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "Error de red: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-                );
-    }
 }
+
+
+//
+//FASE 3: Instituciones y Documentos
+//
+//Poner la etiqueta "Institución" a ciertos usuarios.
+//
+//Generar las cartas formales PDF.

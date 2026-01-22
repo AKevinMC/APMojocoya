@@ -42,7 +42,14 @@
         </activity>
         <activity android:name=".MainActivity" />
         <activity android:name=".LoginActivity" />
-
+        <activity android:name=".ReadingActivity"/>
+        <activity android:name=".YearActivity" />
+        <activity android:name=".MonthActivity" />
+        <activity android:name=".ReportActivity" />
+        <activity android:name=".GastosActivity" />
+        <activity android:name=".CobranzaActivity" />
+        <activity android:name=".DetalleCobroActivity" />
+        <activity android:name=".ConfigTarifaActivity" />
         <meta-data
             android:name="com.google.android.gms.signin.CLIENT_ID"
             android:value="@string/default_web_client_id" /> <!-- Firebase Auth -->
