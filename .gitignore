@@ -55,6 +55,8 @@ app/src/main/res/mipmap-mdpi/
 app/src/main/res/mipmap-xhdpi/
 app/src/main/res/mipmap-xxhdpi/
 app/src/main/res/mipmap-xxxhdpi/
+app/src/main/res/mipmap-anydpi/
+app/src/main/res/drawable/
 
 # Ignorar archivos de imagen binarios en todo el proyecto
 *.png
