@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
@@ -53,7 +55,7 @@ public class InstitucionActivity extends AppCompatActivity {
         tvStatus = findViewById(R.id.tv_status);
 
         configurarSpinner();
-        cargarDatosAutoridades(); // Cargar datos guardados
+        cargarDatosAutoridades(); // Cargar datos guardados previamente
 
         btnGenerar.setOnClickListener(v -> verificarPermisosYGenerar());
     }
@@ -96,6 +98,34 @@ public class InstitucionActivity extends AppCompatActivity {
     }
 
     private void verificarPermisosYGenerar() {
+        // --- 1. VALIDACIÓN DE CAMPOS ---
+        if (etAlcalde.getText().toString().trim().isEmpty()) {
+            etAlcalde.setError("El nombre del Alcalde es obligatorio");
+            etAlcalde.requestFocus();
+            return;
+        }
+        if (etPresiNombre.getText().toString().trim().isEmpty()) {
+            etPresiNombre.setError("Nombre del Presidente/a requerido");
+            etPresiNombre.requestFocus();
+            return;
+        }
+        if (etPresiCI.getText().toString().trim().isEmpty()) {
+            etPresiCI.setError("C.I. del Presidente/a requerido");
+            etPresiCI.requestFocus();
+            return;
+        }
+        if (etTesoNombre.getText().toString().trim().isEmpty()) {
+            etTesoNombre.setError("Nombre del Tesorero/a requerido");
+            etTesoNombre.requestFocus();
+            return;
+        }
+        if (etTesoCI.getText().toString().trim().isEmpty()) {
+            etTesoCI.setError("C.I. del Tesorero/a requerido");
+            etTesoCI.requestFocus();
+            return;
+        }
+
+        // --- 2. SI TODO ESTÁ BIEN, PROCEDEMOS ---
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             procesarCobroAnual();
         } else {
@@ -194,6 +224,11 @@ public class InstitucionActivity extends AppCompatActivity {
                                     if (resultado != null) {
                                         tvStatus.setText("¡Guardado en Documentos!");
                                         Toast.makeText(this, "Guardado en: " + resultado, Toast.LENGTH_LONG).show();
+
+                                        // --- NUEVO: GUARDAR EN HISTORIAL DE FIREBASE ---
+                                        registrarHistorialEnFirebase(anioSel, resultado);
+                                        // ----------------------------------------------
+
                                     } else {
                                         tvStatus.setText("Error al guardar archivo");
                                     }
@@ -210,6 +245,33 @@ public class InstitucionActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Error usuarios: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     btnGenerar.setEnabled(true);
+                });
+    }
+
+    // Método para guardar el rastro en Firebase (Historial)
+    private void registrarHistorialEnFirebase(int anio, String rutaArchivo) {
+        Map<String, Object> tramite = new HashMap<>();
+        tramite.put("tipo_tramite", "Carta Cobro Institucional");
+        tramite.put("gestion_cobrada", anio);
+        tramite.put("fecha_creacion", Timestamp.now());
+
+        // Guardamos quiénes firmaron por si cambian en el futuro, saber quién hizo esta carta
+        Map<String, String> datosCarta = new HashMap<>();
+        datosCarta.put("destinatario_alcalde", etAlcalde.getText().toString());
+        datosCarta.put("presidente_firma", etPresiNombre.getText().toString());
+        datosCarta.put("tesorero_firma", etTesoNombre.getText().toString());
+        tramite.put("datos_carta", datosCarta);
+
+        tramite.put("ruta_archivo_local", rutaArchivo);
+
+        // Guardamos en la colección "historial_tramites"
+        db.collection("historial_tramites")
+                .add(tramite)
+                .addOnSuccessListener(documentReference -> {
+                    Log.d("Historial", "Trámite registrado con ID: " + documentReference.getId());
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Historial", "Error al registrar historial", e);
                 });
     }
 }
