@@ -1,17 +1,28 @@
 package com.example.apmojocoya.activities;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.widget.Button;
 
 import com.example.apmojocoya.R;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-    private Button btnRegistrar, btnVerUsuarios, btnExportarPadron, btnTomarLecturas, btnConfigurarTarifa, btnGastos, btnCobranza, btnCartaAlcaldia;
+    private DrawerLayout drawerLayout;
     private FirebaseFirestore db;
+    private CardView cardLecturas, cardCobranza, cardSocios, cardGastos;
+    private Button btnRegistrarRapido;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,56 +31,57 @@ public class MainActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
 
-        // 1. Vincular los botones con el diseño XML
-        btnRegistrar = findViewById(R.id.btn_registrar_usuario);
-        btnVerUsuarios = findViewById(R.id.btn_ver_usuarios);
-        btnExportarPadron = findViewById(R.id.btn_exportar_padron);
-        btnTomarLecturas = findViewById(R.id.btn_tomar_lecturas);
-        btnConfigurarTarifa = findViewById(R.id.btn_guardar_tarifa);
-        btnCobranza = findViewById(R.id.btn_cobranza);
-        btnCobranza.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, CobranzaActivity.class)));
-        btnGastos = findViewById(R.id.btn_gastos); // Crea este botón en tu XML
-        btnGastos.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, GastosActivity.class)));
-        btnCartaAlcaldia = findViewById(R.id.btn_carta_alcaldia);
-        btnCartaAlcaldia.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, InstitucionActivity.class))
-        );
-        // 2. Configurar las acciones (Navegación)
+        // Configurar Toolbar
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-        // Ir a Registrar Usuario
-        btnRegistrar.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, NewUserActivity.class))
-        );
+        // Configurar Drawer (Menú Lateral)
+        drawerLayout = findViewById(R.id.drawer_layout);
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
 
-        // Ir a Ver Lista de Usuarios
-        btnVerUsuarios.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, UserActivity.class))
-        );
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar,
+                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
 
-        // Ir a Tomar Lecturas
-        btnTomarLecturas.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, YearActivity.class))
-        );
+        // Vincular Tarjetas del Dashboard
+        cardLecturas = findViewById(R.id.card_lecturas);
+        cardCobranza = findViewById(R.id.card_cobranza);
+        cardSocios = findViewById(R.id.card_socios);
+        cardGastos = findViewById(R.id.card_gastos);
+        btnRegistrarRapido = findViewById(R.id.btn_registrar_rapido);
 
-        // Ir a Configurar Precios
-        btnConfigurarTarifa.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, ConfigTarifaActivity.class))
-        );
+        // Configurar acciones del Dashboard
+        cardLecturas.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, YearActivity.class)));
+        cardCobranza.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, CobranzaActivity.class)));
+        cardSocios.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, UserActivity.class)));
+        cardGastos.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, GastosActivity.class)));
+        btnRegistrarRapido.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, NewUserActivity.class)));
+    }
 
-        // --- CAMBIO IMPORTANTE AQUÍ ---
-        // Ir a la nueva pantalla de Reportes (Excel)
-        // Ya no llamamos a 'exportarDatos' directamente porque necesitamos elegir el mes primero.
-        btnExportarPadron.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, ReportActivity.class);
-            startActivity(intent);
-        });
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.nav_reportes) {
+            startActivity(new Intent(this, ReportActivity.class));
+        } else if (id == R.id.nav_carta_alcaldia) {
+            startActivity(new Intent(this, InstitucionActivity.class));
+        } else if (id == R.id.nav_tarifa) {
+            startActivity(new Intent(this, ConfigTarifaActivity.class));
+        }
+
+        drawerLayout.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
     }
 }
-
-
-//
-//FASE 3: Instituciones y Documentos
-//
-//Poner la etiqueta "Institución" a ciertos usuarios.
-//
-//Generar las cartas formales PDF.
